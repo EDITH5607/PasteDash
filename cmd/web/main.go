@@ -21,7 +21,6 @@ func main() {
 
 
 	// temp files for logging error,Infolog 
-
 	/* /tmp/error.log and /tmp/info.log are the system tmp file system parts if we use './tmp/info.log' we make file on the project directory*/
 	/* if you want to see the system temp folder just use command "tail -f /tmp/error.log "*/
 
@@ -49,31 +48,12 @@ func main() {
 		InfoLog: InfoLog,
 	} 
 
-	// router
-
-	mux := http.NewServeMux()
-
-
-	//file server
-
-	fs:= http.FileServer(http.Dir("./ui/static"))
-
-
-
-	//routes 
-
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
-	mux.Handle("/static/",http.StripPrefix("/static",fs))
-
-
 	// initializing server with custom error logging.
 
 	srv := &http.Server{
 		Addr: *addr,
 		ErrorLog: ErrLog,
-		Handler: mux,
+		Handler: app.routes(),
 	}
 
 
