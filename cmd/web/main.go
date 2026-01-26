@@ -1,13 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type application struct{
@@ -85,5 +86,6 @@ func openDB(dsn string) (*sql.DB, error) {
 	if err = db.Ping(); err!=nil {
 		return nil,err
 	}
+	fmt.Println("DB Successfully Connected....")
 	return db,nil
 }
