@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
+
 )
 
 type application struct{
@@ -17,6 +20,7 @@ func main() {
 	//getting http network address through Cli
 
 	addr := flag.String("addr",":4000","HTTP Network Address")
+	dsn := flag.String("dsn", "web:helloworld@/pastedash?parseTime=true", "MySQL data source name!!!")
 	flag.Parse()
 
 
@@ -57,10 +61,29 @@ func main() {
 	}
 
 
+	//db connection
+	db,err := openDB(*dsn)
+	if err!=nil {
+		ErrLog.Fatal(err)	
+	}
+	defer db.Close()
+
+
 	//server initialization and starting
 
 	InfoLog.Printf("Starting Server on :127.0.0.1:%s",*addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	ErrLog.Fatal(err)
 
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db,err := sql.Open("mysql",dsn)
+	if err!=nil {
+		return nil,err
+	}
+	if err = db.Ping(); err!=nil {
+		return nil,err
+	}
+	return db,nil
 }
