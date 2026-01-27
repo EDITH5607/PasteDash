@@ -25,24 +25,6 @@ func main() {
 	flag.Parse()
 
 
-	// temp files for logging error,Infolog 
-	/* /tmp/error.log and /tmp/info.log are the system tmp file system parts if we use './tmp/info.log' we make file on the project directory*/
-	/* if you want to see the system temp folder just use command "tail -f /tmp/error.log "*/
-
-	// e,eerr := os.OpenFile("/tmp/error.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-	// e,eerr := os.OpenFile("/tmp/error.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-	// if eerr != nil  {
-	// 	log.Fatal(eerr)
-	// }
-	// i,ier := os.OpenFile("/tmp/info.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-	// if ier != nil  {
-	// 	log.Fatal(ier)
-	// }
-	// defer i.Close()
-	// defer e.Close()
-
-
-
 	//InfoLog and ErrorLog
 	InfoLog := log.New(os.Stdout,"INFO\t", log.Ldate | log.Ltime)
 	ErrLog := log.New(os.Stderr, "ERROR\t", log.Ldate | log.Ltime | log.Lshortfile)
