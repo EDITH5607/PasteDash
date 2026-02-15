@@ -1,10 +1,45 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"runtime/debug"
 )
+
+
+func (app *application)render(w http.ResponseWriter, status int, data *templateData, page string) {
+	
+	// passing name of the page for retrive from the cache if not found error handling works
+	ts,ok := app.templateCache[page]
+	if !ok {
+		err := fmt.Errorf("the template %s does not exist", page)
+		app.serverError(w,err)
+		return 
+	}
+
+	//initialzing new byte buffer
+	buf := new(bytes.Buffer)
+
+	//executing the template with its data, inital template name,  and Write the template to the buffer, instead of straight to the http.ResponseWriter. If there's an error the html page is not send to browser
+	err := ts.ExecuteTemplate(buf,"base", data)
+	if err !=nil {
+		app.serverError(w,err)	
+		return
+	}
+
+	// adding the status header like 200,405 as the header.
+	w.WriteHeader(status)
+
+	// Write the contents of the buffer to the http.ResponseWrite
+	// another method instead of w.write() to reponse....
+	buf.WriteTo(w)
+	
+
+}
+
+
+
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
