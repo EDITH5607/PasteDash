@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
+
 	"github.com/EDITH5607/PasteDash/internal/models"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -15,6 +17,7 @@ type application struct{
 	ErrLog *log.Logger
 	InfoLog *log.Logger
 	Snippet *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 
@@ -37,12 +40,19 @@ func main() {
 	}
 	defer db.Close()
 
+	//template cache..
+	templatecache,err := newTemplateCache()
+	if err!=nil {
+		ErrLog.Fatalln(err)
+	}
+
 
 	// initialzing an struct of custom logging and passing db connection...(dependency injection)
 	app := &application{
 		ErrLog: ErrLog,
 		InfoLog: InfoLog,
 		Snippet: &models.SnippetModel{DB:db},
+		templateCache: templatecache,
 	} 
 
 	// initializing server with custom error logging.
