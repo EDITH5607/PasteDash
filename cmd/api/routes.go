@@ -11,11 +11,10 @@ func (app *application) routes() http.Handler{
 	// router
 	router := httprouter.New()	
 
+	// custom handler to show notfound error instead of the router's own error handling
 	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				app.NotFound(w)
 	}) 
-
-
 
 	//file server
 	fs:= http.FileServer(http.Dir("./ui/static/"))
