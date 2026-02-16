@@ -2,11 +2,11 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"github.com/EDITH5607/PasteDash/internal/models"
 	"github.com/julienschmidt/httprouter"
+	"fmt"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -57,17 +57,37 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
-	title := "0 snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n - Kobayashi Issa"
-	expires := 7
-	id, err := app.Snippet.Insert(title, content, expires)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+	data := app.newTemplateData(r)
+	app.render(w, http.StatusOK, data, "create.html")
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display the form for creating a new snippet"))
+
+	//r.ParseForm() which adds any data in POST request bodies to the r.PostForm map
+	err :=r.ParseForm()
+	if err!=nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	//r.PostForm.Get() method to retrieve the title and content from the r.PostForm map.
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+
+	expires,err := strconv.Atoi(r.PostForm.Get("expires"))
+	if err!=nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	//calling db method to insert the snippet set.
+	id, err :=app.Snippet.Insert(title,content,expires)
+	if err!=nil {
+		app.serverError(w,err)
+		return
+	}
+
+	// redirect to show the newly added snippet.
+	http.Redirect(w,r, fmt.Sprintf("/snippet/view/%d",id),http.StatusSeeOther)
+
 } 
