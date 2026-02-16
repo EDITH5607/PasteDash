@@ -5,18 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-
 	"github.com/EDITH5607/PasteDash/internal/models"
+	"github.com/julienschmidt/httprouter"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.NotFound(w)
-		return
-	}
-
-	// panic("Oops!! Something went Wrong!!")
-
 	// displaying latest code ....
 	snippets, err := app.Snippet.Latest()
 	if err != nil {
@@ -36,7 +29,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))	
 	if err != nil || id < 1 {
 		app.NotFound(w)
 		return
@@ -60,20 +56,18 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost) // this way we can send tokens for verification.
-		app.clientError(w, http.StatusMethodNotAllowed)
-		return
-	}
 
 	title := "0 snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n - Kobayashi Issa"
 	expires := 7
 	id, err := app.Snippet.Insert(title, content, expires)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
-	w.Write([]byte("Create a new Snippet !!"))
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
+
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Display the form for creating a new snippet"))
+} 
