@@ -7,10 +7,20 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
-
+	
 	"github.com/EDITH5607/PasteDash/internal/models"
 	"github.com/julienschmidt/httprouter"
 )
+
+type snippetCreateForm struct {
+	Title string
+	Content string
+	Expires int
+	fieldErrors map[string]string
+
+}
+
+
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// displaying latest code ....
@@ -33,14 +43,17 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
+	// extracting params from the request context
 	params := httprouter.ParamsFromContext(r.Context())
 
+	// convert string to int
 	id, err := strconv.Atoi(params.ByName("id"))	
 	if err != nil || id < 1 {
 		app.NotFound(w)
 		return
 	}
 
+	// getting the snippet using the id from db.
 	snippet, err := app.Snippet.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
@@ -73,41 +86,51 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	//r.PostForm.Get() method to retrieve the title and content from the r.PostForm map.
-	title := r.PostForm.Get("title")
-	content := r.PostForm.Get("content")
-
 	expires,err := strconv.Atoi(r.PostForm.Get("expires"))
 	if err!=nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	// making a error map of each field.
-	fieldErrors := make(map[string]string)
+	//r.PostForm.Get() method to retrieve the title and content from the r.PostForm map.
+	// use snippetCreateform for hold form data and empty map for any validation errors.if data is incorrect the other form data is stored and user only need to change the wrong one.
+	form := &snippetCreateForm{
+		Title : r.PostForm.Get("title"),
+		Content : r.PostForm.Get("content"),
+		Expires: expires,
+		fieldErrors: map[string]string{},
 
-	if strings.TrimSpace(title) == "" {
-		fieldErrors["title"] = "This field cannot be blank"
-	} else if utf8.RuneCountInString(title) > 100 {
-		fieldErrors["title"] = "This field cannot be more than 100 characters long"
+
 	}
 
-	if strings.TrimSpace(content) == "" {
-		fieldErrors["content"] = "This field cannot be blank"
+	// validation of the data
+	if strings.TrimSpace(form.Title) == "" {
+		form.fieldErrors["title"] = "This field cannot be blank"
+
+	// utf8.RuneCountInString used intead of len fun because of different characters are not accounted eg:ë
+	} else if utf8.RuneCountInString(form.Title) > 100 {
+		form.fieldErrors["title"] = "This field cannot be more than 100 characters long"
 	}
 
-	if  expires !=1 && expires!=7 && expires != 365 {
-		fieldErrors["expires"] = "This field must equal 1, 7 or 365"
+	if strings.TrimSpace(form.Content) == "" {
+		form.fieldErrors["content"] = "This field cannot be blank"
+	}
+
+	if  form.Expires !=1 && form.Expires !=7 && form.Expires != 365 {
+		form.fieldErrors["expires"] = "This field must equal 1, 7 or 365"
 	}
 
 	// if any error in the map just send reponse the error and return the handler
-	if len(fieldErrors) > 0 {
-		fmt.Fprint(w, fieldErrors)
+	if len(form.fieldErrors) > 0 {
+		// passing in the previous data and validation errors
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, data, "create.html")
 		return
 	}
 
 	//calling db method to insert the snippet set.
-	id, err :=app.Snippet.Insert(title,content,expires)
+	id, err :=app.Snippet.Insert(form.Title,form.Content,form.Expires)
 	if err!=nil {
 		app.serverError(w,err)
 		return
