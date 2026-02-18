@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
-	"unicode/utf8"
-	
 	"github.com/EDITH5607/PasteDash/internal/models"
+	"github.com/EDITH5607/PasteDash/internal/validator"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -16,8 +14,7 @@ type snippetCreateForm struct {
 	Title string
 	Content string
 	Expires int
-	fieldErrors map[string]string
-
+	validator.Validator
 }
 
 
@@ -74,6 +71,9 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
+	data.Form = &snippetCreateForm{
+		Expires: 365,
+	}
 	app.render(w, http.StatusOK, data, "create.html")
 }
 
@@ -98,32 +98,20 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		Title : r.PostForm.Get("title"),
 		Content : r.PostForm.Get("content"),
 		Expires: expires,
-		fieldErrors: map[string]string{},
-
 
 	}
 
 	// validation of the data
-	if strings.TrimSpace(form.Title) == "" {
-		form.fieldErrors["title"] = "This field cannot be blank"
+	form.CheckField(validator.NotBlank(form.Title), "title",  "This field cannot be blank")
+	form.CheckField(validator.MaxChar(form.Title,100), "title","This field cannot be more than 100 characters long")
+	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+	form.CheckField(validator.PermitInt(form.Expires, 1,7,365),"expires", "This field must equal 1, 7 or 365")
 
-	// utf8.RuneCountInString used intead of len fun because of different characters are not accounted eg:ë
-	} else if utf8.RuneCountInString(form.Title) > 100 {
-		form.fieldErrors["title"] = "This field cannot be more than 100 characters long"
-	}
-
-	if strings.TrimSpace(form.Content) == "" {
-		form.fieldErrors["content"] = "This field cannot be blank"
-	}
-
-	if  form.Expires !=1 && form.Expires !=7 && form.Expires != 365 {
-		form.fieldErrors["expires"] = "This field must equal 1, 7 or 365"
-	}
-
-	// if any error in the map just send reponse the error and return the handler
-	if len(form.fieldErrors) > 0 {
-		// passing in the previous data and validation errors
+	// if any error in the map form.valid return false!!
+	if  !form.Valid() {
+		// making a template data struct
 		data := app.newTemplateData(r)
+		// passing snippetform to templatedata,to provide previous data and to solve validation errors
 		data.Form = form
 		app.render(w, http.StatusUnprocessableEntity, data, "create.html")
 		return
