@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/EDITH5607/PasteDash/internal/models"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -18,6 +19,7 @@ type application struct{
 	InfoLog *log.Logger
 	Snippet *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder *form.Decoder
 }
 
 
@@ -46,6 +48,10 @@ func main() {
 		ErrLog.Fatalln(err)
 	}
 
+	// initialize form decoder
+	formDecoder := form.NewDecoder()
+
+
 
 	// initialzing an struct of custom logging and passing db connection...(dependency injection)
 	app := &application{
@@ -53,6 +59,7 @@ func main() {
 		InfoLog: InfoLog,
 		Snippet: &models.SnippetModel{DB:db},
 		templateCache: templatecache,
+		formDecoder: formDecoder,
 	} 
 
 	// initializing server with custom error logging.
