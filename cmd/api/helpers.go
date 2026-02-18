@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"runtime/debug"
-	
+
+	"github.com/go-playground/form/v4"
 )
 
 
@@ -39,6 +41,24 @@ func (app *application)render(w http.ResponseWriter, status int, data *templateD
 }
 
 
+func  (app *application)DecodePostForm(r *http.Request, dst any) error  {
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+	// use decoder to parse the form pass to dst(d)
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		var invalidDecoderError *form.InvalidEncodeError
+		// errors.as used to check the error chain if match found then copy to invaliddecder error variable that why we pass pointer.
+		if errors.As(err,&invalidDecoderError) {
+			panic(err)
+		}
+		return err
+	}
+	return  nil
+	
+}
 
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
