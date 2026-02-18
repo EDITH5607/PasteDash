@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	
 )
 
 
@@ -27,7 +28,6 @@ func (app *application)render(w http.ResponseWriter, status int, data *templateD
 		app.serverError(w,err)	
 		return
 	}
-
 	// adding the status header like 200,405 as the header.
 	w.WriteHeader(status)
 
