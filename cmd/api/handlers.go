@@ -11,10 +11,10 @@ import (
 )
 
 type snippetCreateForm struct {
-	Title string
-	Content string
-	Expires int
-	validator.Validator
+	Title string `form:"title"`
+	Content string `form:"content"`
+	Expires int  `form:"expires"`
+	validator.Validator  `form:"-"`
 }
 
 
@@ -78,27 +78,13 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+	var form snippetCreateForm
 
-	//r.ParseForm() which adds any data in POST request bodies to the r.PostForm map
-	err :=r.ParseForm()
-	if err!=nil {
-		app.clientError(w, http.StatusBadRequest)
+	// use decoderpostform to parse the data from the form and show if any invalid encode error happens
+	err := app.DecodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w,http.StatusBadRequest)
 		return
-	}
-
-	expires,err := strconv.Atoi(r.PostForm.Get("expires"))
-	if err!=nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
-	//r.PostForm.Get() method to retrieve the title and content from the r.PostForm map.
-	// use snippetCreateform for hold form data and empty map for any validation errors.if data is incorrect the other form data is stored and user only need to change the wrong one.
-	form := &snippetCreateForm{
-		Title : r.PostForm.Get("title"),
-		Content : r.PostForm.Get("content"),
-		Expires: expires,
-
 	}
 
 	// validation of the data
