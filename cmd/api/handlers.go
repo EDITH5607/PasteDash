@@ -78,6 +78,7 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+	
 	var form snippetCreateForm
 
 	// use decoderpostform to parse the data from the form and show if any invalid encode error happens
