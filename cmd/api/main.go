@@ -8,8 +8,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/EDITH5607/PasteDash/internal/models"
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -20,13 +23,14 @@ type application struct{
 	Snippet *models.SnippetModel
 	templateCache map[string]*template.Template
 	formDecoder *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 
 func main() {
 	//getting http network address through Cli
 	addr := flag.String("addr",":4000","HTTP Network Address")
-	dsn := flag.String("dsn", "web:helloworld@/pastedash?parseTime=true", "MySQL data source name!!!")
+	dsn := flag.String("dsn", "web:#354286Aatt@/pastedash?parseTime=true", "MySQL data source name!!!")
 	flag.Parse()
 
 
@@ -52,6 +56,13 @@ func main() {
 	formDecoder := form.NewDecoder()
 
 
+	// creating an instance of session Manager and passing the mysql db to store the session and set the lifetime.
+	sessionManager := scs.New()
+	// 'sessions' name is default name in session manager package for storing user sessions. so we made a table called sessions in our db
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 *time.Hour
+
+
 
 	// initialzing an struct of custom logging and passing db connection...(dependency injection)
 	app := &application{
@@ -60,6 +71,7 @@ func main() {
 		Snippet: &models.SnippetModel{DB:db},
 		templateCache: templatecache,
 		formDecoder: formDecoder,
+		sessionManager: sessionManager,
 	} 
 
 	// initializing server with custom error logging.
