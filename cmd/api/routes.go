@@ -21,11 +21,18 @@ func (app *application) routes() http.Handler{
 	router.Handler(http.MethodGet,"/static/*filepath",http.StripPrefix("/static",fs))
 
 
+	dynamic := alice.New(app.sessionManager.LoadAndSave)
+
 	//routes 
-	router.HandlerFunc(http.MethodGet,"/", app.home)
-	router.HandlerFunc(http.MethodGet,"/snippet/view/:id", app.snippetView)
-	router.HandlerFunc(http.MethodGet,"/snippet/create", app.snippetCreate)
-	router.HandlerFunc(http.MethodPost,"/snippet/create", app.snippetCreatePost)
+	// middleware like loadAndSave accept the next fn as handler so we convert it http.handler type
+	//also middleware return http.Handler type but the router.HandlerFunc accepts http.HandlerFunc but middleware return http.handler method that why we either convert to handler or change the router.Hander() 
+	router.Handler(http.MethodGet,"/", app.sessionManager.LoadAndSave(http.HandlerFunc(app.home)))
+	
+	// the router.HandlerFunc() is remove because it accept fn and type convert the fn into http handler 
+	// but the middleware chain and middleware are already type as handlers so no need to convert so we use router.Handler 
+	router.Handler(http.MethodGet,"/snippet/view/:id", dynamic.ThenFunc(app.snippetView))
+	router.Handler(http.MethodGet,"/snippet/create", dynamic.ThenFunc(app.snippetCreate))
+	router.Handler(http.MethodPost,"/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
 
 	// use alice of middleware chaining alice.new(m1,m2,m3)  request->m1->m2->m3
 	standard := alice.New(app.logRequest,securityHeader)
