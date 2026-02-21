@@ -61,6 +61,7 @@ func main() {
 	// 'sessions' name is default name in session manager package for storing user sessions. so we made a table called sessions in our db
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 12 *time.Hour
+	sessionManager.Cookie.Secure = true
 
 
 
@@ -84,7 +85,7 @@ func main() {
 
 	//server initialization and starting
 	InfoLog.Printf("Starting Server on :127.0.0.1:%s",*addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	ErrLog.Fatal(err)
 
 }
