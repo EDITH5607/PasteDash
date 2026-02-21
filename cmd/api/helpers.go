@@ -49,7 +49,7 @@ func  (app *application)DecodePostForm(r *http.Request, dst any) error  {
 	err = app.formDecoder.Decode(dst, r.PostForm)
 	if err != nil {
 		var invalidDecoderError *form.InvalidEncodeError
-		// errors.as used to check the error chain if match found then copy to invaliddecder error variable that why we pass pointer.
+		// errors.As() used to check the error chain if match found then copy to invaliddecder error variable that why we pass pointer.
 		if errors.As(err,&invalidDecoderError) {
 			panic(err)
 		}
