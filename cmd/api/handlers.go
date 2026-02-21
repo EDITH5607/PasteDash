@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
 	"github.com/EDITH5607/PasteDash/internal/models"
 	"github.com/EDITH5607/PasteDash/internal/validator"
 	"github.com/julienschmidt/httprouter"
@@ -38,6 +39,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 }
 
+
+
+
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 	// extracting params from the request context
@@ -61,12 +65,17 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
 	// getting year and other data using newtemplatedata fun and adding snippet to the struct from db.
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
 
+
 	app.render(w,http.StatusOK, data, "view.html")
 }
+
+
+
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
@@ -76,6 +85,9 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	app.render(w, http.StatusOK, data, "create.html")
 }
+
+
+
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	
@@ -110,6 +122,9 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w,err)
 		return
 	}
+
+	// sending the message "flash":"Snippet Sucessfully Created!!" to the current request context
+	app.sessionManager.Put(r.Context(), "flash","Snippet Successfully Created!!")
 
 	// redirect to show the newly added snippet.
 	http.Redirect(w,r, fmt.Sprintf("/snippet/view/%d",id),http.StatusSeeOther)
