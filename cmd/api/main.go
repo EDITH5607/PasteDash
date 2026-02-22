@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -74,6 +75,10 @@ func main() {
 		formDecoder: formDecoder,
 		sessionManager: sessionManager,
 	} 
+
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.CurveP256, tls.X25519},
+	}
 	
 
 	// initializing server with custom error logging.
@@ -81,6 +86,13 @@ func main() {
 		Addr: *addr,
 		ErrorLog: ErrLog,
 		Handler: app.routes(),
+		TLSConfig: tlsConfig,
+		// keep alive connection  between client and server that time is idletime
+		IdleTimeout: time.Minute,
+		// time take for reading the request and close the connection if time exceeds.
+		ReadTimeout: time.Second * 5,
+		//time taken to write the response and close the connection if time exceeds
+		WriteTimeout: time.Second * 10,
 	}
 
 	//server initialization and starting
