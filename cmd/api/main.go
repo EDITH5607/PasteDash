@@ -19,12 +19,13 @@ import (
 )
 
 type application struct{
-	ErrLog *log.Logger
-	InfoLog *log.Logger
-	Snippet *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder *form.Decoder
-	sessionManager *scs.SessionManager
+	ErrLog 		*log.Logger
+	InfoLog 		*log.Logger
+	Users 		*models.UserModel
+	Snippet 		*models.SnippetModel
+	templateCache 	map[string]*template.Template
+	formDecoder 	*form.Decoder
+	sessionManager 	*scs.SessionManager
 }
 
 
@@ -70,6 +71,7 @@ func main() {
 	app := &application{
 		ErrLog: ErrLog,
 		InfoLog: InfoLog,
+		Users: &models.UserModel{DB: db},
 		Snippet: &models.SnippetModel{DB:db},
 		templateCache: templatecache,
 		formDecoder: formDecoder,
