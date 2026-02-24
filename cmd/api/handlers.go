@@ -18,6 +18,14 @@ type snippetCreateForm struct {
 	validator.Validator  `form:"-"`
 }
 
+type userSignupForm struct {
+	Name 		string   `form:"name"`
+	Email		string   `form:"email"`
+	Password 	string   `form:"password"`
+	validator.Validator  `form:"-"`
+
+}
+
 
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -34,9 +42,6 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	// rendering the cached template of home page
 	app.render(w, http.StatusOK, data, "home.html")
-
-
-
 }
 
 
@@ -65,12 +70,9 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	// getting year and other data using newtemplatedata fun and adding snippet to the struct from db.
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
-
-
 	app.render(w,http.StatusOK, data, "view.html")
 }
 
@@ -133,12 +135,33 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 
 
 func (app *application) userSignup (w http.ResponseWriter, r *http.Request){
-	fmt.Fprintln(w,"Display html page of userSignup")
-
+	data := app.newTemplateData(r)
+	data.Form = &userSignupForm{}
+	app.render(w, http.StatusOK, data, "signup.html")
 }
 
 func (app *application) userSignupPost (w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w,"Create New user")
+	var form userSignupForm
+	// this will decode the form and parse it in to the form(usesignupform)
+	err := app.DecodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be Blank !!")
+	form.CheckField(validator.NotBlank(form.Email),"email", "This field cannot be Blank !!")
+	form.CheckField(validator.Matches(form.Email),"email", "This field cannot be Blank !!")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This Field cannot be blank !!")
+	form.CheckField(validator.MinChars(form.Password, 8), "password", "This Field must be atleast 8 character long !!")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w,http.StatusUnprocessableEntity, data,"signup.html")
+		return
+	}
+	fmt.Fprintln(w, "Create a new user...")
+
 }
 
 func (app * application) userLogin (w http.ResponseWriter, r *http.Request)  {
