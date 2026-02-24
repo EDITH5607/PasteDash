@@ -8,12 +8,14 @@ import (
 
 // map for storing validation error
 type Validator struct {
+	// non field errors means error other than form type
+	NonfieldErrors []string
 	FieldErrors map[string]string
 }
 
 // for checking any validation error in the map
 func (v *Validator) Valid() bool {
-	return  len(v.FieldErrors) == 0
+	return  len(v.FieldErrors) == 0 && len(v.NonfieldErrors) == 0
 }
 
 // for adding new validation error messages with correponding field
@@ -28,6 +30,11 @@ func (v *Validator) AddFieldError(key, message string) {
 	if _, exist := v.FieldErrors[key]; !exist {
 		v.FieldErrors[key] = message
 	}
+}
+
+// for adding new Nonfielderrors  like login failed to the slice in the struct	
+func (v *Validator) AddNonFieldErrors(message string) {
+	v.NonfieldErrors = append(v.NonfieldErrors, message)
 }
 
 // checking the condition and adding the message in the validation error map.
