@@ -26,6 +26,12 @@ type userSignupForm struct {
 
 }
 
+type userLoginForm struct {
+	Email string `form:"email"`
+	Password string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -134,12 +140,16 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 } 
 
 
+
+//signup GET function for rendering html page.
 func (app *application) userSignup (w http.ResponseWriter, r *http.Request){
 	data := app.newTemplateData(r)
 	data.Form = &userSignupForm{}
 	app.render(w, http.StatusOK, data, "signup.html")
 }
 
+
+// signup POST function for validation and injection data to the DB
 func (app *application) userSignupPost (w http.ResponseWriter, r *http.Request) {
 	var form userSignupForm
 	// this will decode the form and parse it in to the form(usesignupform)
@@ -150,7 +160,7 @@ func (app *application) userSignupPost (w http.ResponseWriter, r *http.Request) 
 	}
 	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be Blank !!")
 	form.CheckField(validator.NotBlank(form.Email),"email", "This field cannot be Blank !!")
-	form.CheckField(validator.Matches(form.Email),"email", "This field cannot be Blank !!")
+	form.CheckField(validator.Matches(form.Email),"email", "Please Enter valid Email !!")
 	form.CheckField(validator.NotBlank(form.Password), "password", "This Field cannot be blank !!")
 	form.CheckField(validator.MinChars(form.Password, 8), "password", "This Field must be atleast 8 character long !!")
 
@@ -160,12 +170,27 @@ func (app *application) userSignupPost (w http.ResponseWriter, r *http.Request) 
 		app.render(w,http.StatusUnprocessableEntity, data,"signup.html")
 		return
 	}
-	fmt.Fprintln(w, "Create a new user...")
 
+	err = app.Users.Insert(form.Name, form.Email, form.Password)
+	if err!= nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			form.AddFieldError("email", "Email address is already in use")
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, http.StatusUnprocessableEntity,data, "signup.html")
+		} else {
+			app.serverError(w,err)
+		}
+		return
+	}
+	app.sessionManager.Put(r.Context(), "flash","Your signup was successful. Please log in." )
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 
 func (app * application) userLogin (w http.ResponseWriter, r *http.Request)  {
-	fmt.Fprintln(w, "Display html page of user login")
+	data := app.newTemplateData(r)
+	data.Form = &userLoginForm{}
+	app.render(w,http.StatusOK, data, "login.html")
 }
 
 func (app *application) userLoginPost (w http.ResponseWriter, r *http.Request) {
