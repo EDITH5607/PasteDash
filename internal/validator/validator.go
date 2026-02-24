@@ -1,6 +1,7 @@
 package validator
 
-import ( 
+import (
+	"net/mail"
 	"strings"
 	"unicode/utf8"
 )
@@ -57,6 +58,20 @@ func PermitInt(value int, permittedvalues ...int) bool {
 	}
 	return false
 }
+
+// checking the string's is minchar length
+func MinChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) >= n
+}
+
+// mail.parseaddress is a standard library for validating string is email or not
+func Matches(value string) bool {
+	_, err := mail.ParseAddress(value)
+	if err != nil {
+		return false
+	}
+	return  true
+}	
 
 
 
