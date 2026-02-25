@@ -31,15 +31,18 @@ func (app *application) routes() http.Handler{
 	// the router.HandlerFunc() is remove because it accept fn and type convert the fn into http handler 
 	// but the middleware chain and middleware are already type as handlers so no need to convert so we use router.Handler 
 	router.Handler(http.MethodGet,"/snippet/view/:id", dynamic.ThenFunc(app.snippetView))
-	router.Handler(http.MethodGet,"/snippet/create", dynamic.ThenFunc(app.snippetCreate))
-	router.Handler(http.MethodPost,"/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
-
-
 	router.Handler(http.MethodGet, "/user/signup", dynamic.ThenFunc(app.userSignup))
 	router.Handler(http.MethodPost, "/user/signup", dynamic.ThenFunc(app.userSignupPost))
 	router.Handler(http.MethodGet, "/user/login", dynamic.ThenFunc(app.userLogin))
 	router.Handler(http.MethodPost, "/user/login", dynamic.ThenFunc(app.userLoginPost))
-	router.Handler(http.MethodPost, "/user/logout",dynamic.ThenFunc(app.userLogoutPost))
+
+	protected := dynamic.Append(app.requiredAuthentication)
+
+
+	router.Handler(http.MethodGet,"/snippet/create", protected.ThenFunc(app.snippetCreate))
+	router.Handler(http.MethodPost,"/snippet/create", protected.ThenFunc(app.snippetCreatePost))
+	router.Handler(http.MethodPost, "/user/logout",protected.ThenFunc(app.userLogoutPost))
+
 
 	// use alice of middleware chaining alice.new(m1,m2,m3)  request->m1->m2->m3
 	standard := alice.New(app.logRequest,securityHeader)
