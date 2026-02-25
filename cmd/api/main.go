@@ -98,7 +98,7 @@ func main() {
 	}
 
 	//server initialization and starting
-	InfoLog.Printf("Starting Server on :127.0.0.1:%s",*addr)
+	InfoLog.Printf("Starting Server on https://localhost%s",*addr)
 	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	ErrLog.Fatal(err)
 
