@@ -248,7 +248,7 @@ func (app *application) userLoginPost (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// renew the token for security purpose to avoid unnecessary cyber attacks
+	// renew the token for security purpose to avoid unnecessary cyber attacks , the middleware will give a new token if token is not present when we enter the route so for changing that 
 	err = app.sessionManager.RenewToken(r.Context())
 	if err!=nil {
 		app.serverError(w, err)
@@ -262,7 +262,7 @@ func (app *application) userLoginPost (w http.ResponseWriter, r *http.Request) {
 
 // logout POST handler for logout and session cleaning
 func (app *application) userLogoutPost (w http.ResponseWriter, r *http.Request) {
-	// for security renew the token 
+	// for security renew the token , the middleware will give a new token if token is not present when we enter the route so for changing that 
 	err := app.sessionManager.RenewToken(r.Context())
 	if err != nil {
 		app.serverError(w,err)
