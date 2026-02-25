@@ -203,6 +203,7 @@ func (app *application) userSignupPost (w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 
+// login GET handler for rendering pages
 func (app * application) userLogin (w http.ResponseWriter, r *http.Request)  {
 	data := app.newTemplateData(r)
 	data.Form = &userLoginForm{}
@@ -210,6 +211,7 @@ func (app * application) userLogin (w http.ResponseWriter, r *http.Request)  {
 	app.render(w,http.StatusOK, data, "login.html")
 }
 
+// login POST handler for form 
 func (app *application) userLoginPost (w http.ResponseWriter, r *http.Request) {
 	//making a zero instance and store data from form to the struct
 	var form userLoginForm
@@ -258,7 +260,18 @@ func (app *application) userLoginPost (w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }	
 
+// logout POST handler for logout and session cleaning
 func (app *application) userLogoutPost (w http.ResponseWriter, r *http.Request) {
-	
-	fmt.Fprintln(w, "Logout the user...")
+	// for security renew the token 
+	err := app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w,err)
+		return
+	}
+	// remove the authentication id from the context
+	app.sessionManager.Remove(r.Context(), "AuthenticatedUserID")
+	// showing the flash message
+	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
+	http.Redirect(w,r,"/", http.StatusSeeOther)
+
 }
