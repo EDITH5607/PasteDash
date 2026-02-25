@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"time"
-
 	"github.com/EDITH5607/PasteDash/internal/models"
 )
 
@@ -15,6 +14,7 @@ type templateData struct {
 	Snippets []*models.Snippet
 	Form any
 	Flash string
+	IsAuthenticated  bool
 }
 
 func humanDate(t time.Time) string {
@@ -66,6 +66,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData{
 		CurrentYear: time.Now().Year(),
 		// popstring() will retrieve and remove it from the session data...
 		Flash: app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: app.isAuthenticated(r),
 
 	}
 }
