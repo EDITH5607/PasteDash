@@ -8,7 +8,7 @@
 
       <div>
             <label>Email:</label>
-            {{with .Form.Email}}
+            {{with .Form.FieldErrors.email}}
                   <label class="error">{{.}}</label>
             {{end}}
             <input type="email" name="email" value="{{.Form.Email}}">
@@ -16,7 +16,7 @@
 
       <div>
             <label>Password:</label>
-            {{with .Form.Password}}
+            {{with .Form.FieldErrors.password}}
                   <label class="error">{{.}}</label>
             {{end}}
             <input type="password" name="password">
