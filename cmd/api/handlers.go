@@ -11,6 +11,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+
+// struct for snippet form
 type snippetCreateForm struct {
 	Title string `form:"title"`
 	Content string `form:"content"`
@@ -18,6 +20,7 @@ type snippetCreateForm struct {
 	validator.Validator  `form:"-"`
 }
 
+//struct for signup form
 type userSignupForm struct {
 	Name 		string   `form:"name"`
 	Email		string   `form:"email"`
@@ -26,6 +29,7 @@ type userSignupForm struct {
 
 }
 
+// struct for login form
 type userLoginForm struct {
 	Email string `form:"email"`
 	Password string `form:"password"`
@@ -34,6 +38,7 @@ type userLoginForm struct {
 
 
 
+// Home page handler
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// displaying latest code ....
 	snippets, err := app.Snippet.Latest()
@@ -53,6 +58,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 
 
+// snippet view handler GET
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 	// extracting params from the request context
@@ -85,9 +91,11 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 
 
+// Snippet create page GET Handler
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
+	// to start with default value as expire:365
 	data.Form = &snippetCreateForm{
 		Expires: 365,
 	}
@@ -120,6 +128,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		data := app.newTemplateData(r)
 		// passing snippetform to templatedata,to provide previous data and to solve validation errors
 		data.Form = form
+		// getting form field error messages  and other data using newtemplatedata func and adding snippet to the struct from db.
 		app.render(w, http.StatusUnprocessableEntity, data, "create.html")
 		return
 	}
@@ -145,6 +154,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 func (app *application) userSignup (w http.ResponseWriter, r *http.Request){
 	data := app.newTemplateData(r)
 	data.Form = &userSignupForm{}
+	// getting form field error messages  and other data using newtemplatedata func and adding snippet to the struct from db.
 	app.render(w, http.StatusOK, data, "signup.html")
 }
 
@@ -158,31 +168,37 @@ func (app *application) userSignupPost (w http.ResponseWriter, r *http.Request) 
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	// validationing the form data 
 	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be Blank !!")
 	form.CheckField(validator.NotBlank(form.Email),"email", "This field cannot be Blank !!")
 	form.CheckField(validator.Matches(form.Email),"email", "Please Enter valid Email !!")
 	form.CheckField(validator.NotBlank(form.Password), "password", "This Field cannot be blank !!")
 	form.CheckField(validator.MinChars(form.Password, 8), "password", "This Field must be atleast 8 character long !!")
 
+	// flashing error if anything in the field error slice
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
+		// getting form field error messages  and other data using newtemplatedata func and adding snippet to the struct from db.
 		app.render(w,http.StatusUnprocessableEntity, data,"signup.html")
 		return
 	}
 
+	// insert the form data to the db (user)
 	err = app.Users.Insert(form.Name, form.Email, form.Password)
 	if err!= nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Email address is already in use")
 			data := app.newTemplateData(r)
 			data.Form = form
+			// getting form field error messages  and other data using newtemplatedata func and adding snippet to the struct from db.
 			app.render(w, http.StatusUnprocessableEntity,data, "signup.html")
 		} else {
 			app.serverError(w,err)
 		}
 		return
 	}
+	// flashing the successful message
 	app.sessionManager.Put(r.Context(), "flash","Your signup was successful. Please log in." )
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
@@ -190,13 +206,59 @@ func (app *application) userSignupPost (w http.ResponseWriter, r *http.Request) 
 func (app * application) userLogin (w http.ResponseWriter, r *http.Request)  {
 	data := app.newTemplateData(r)
 	data.Form = &userLoginForm{}
+	// getting form field error messages  and other data using newtemplatedata func and adding snippet to the struct from db.
 	app.render(w,http.StatusOK, data, "login.html")
 }
 
 func (app *application) userLoginPost (w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Authenticate and login the user")
-}
+	//making a zero instance and store data from form to the struct
+	var form userLoginForm
+	err := app.DecodePostForm(r,&form)
+	if err!=nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// validating form data 
+	form.CheckField(validator.NotBlank(form.Email), "email", "This Field Cannot be Blank !!")
+	form.CheckField(validator.Matches(form.Email), "email", "Please Enter valid Email !!")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This Field cannot be blank !!")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		// getting form field error messages  and other data using newtemplatedata func and adding snippet to the struct from db.
+		app.render(w,http.StatusOK, data,"login.html")
+	}
+
+	// Authenticating the user with email and password
+	id, err :=app.Users.Authenticate(form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err,models.ErrInvalidCredential) {
+			form.AddNonFieldErrors("Email or password is incorrect!!")
+			data := app.newTemplateData(r)
+			data.Form = form
+			// getting form field error messages  and other data using newtemplatedata func and adding snippet to the struct from db.
+			app.render(w,http.StatusUnprocessableEntity, data, "login.html")
+		} else {
+			app.serverError(w,err)
+		}
+		return
+	}
+
+	// renew the token for security purpose to avoid unnecessary cyber attacks
+	err = app.sessionManager.RenewToken(r.Context())
+	if err!=nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// storing the authenticated user id as context for future use
+	app.sessionManager.Put(r.Context(), "AuthenticatedUserID", id)
+	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+}	
 
 func (app *application) userLogoutPost (w http.ResponseWriter, r *http.Request) {
+	
 	fmt.Fprintln(w, "Logout the user...")
 }
