@@ -11,5 +11,6 @@ require (
 	github.com/go-playground/form/v4 v4.3.0 // indirect
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/justinas/alice v1.2.0 // indirect
+	github.com/justinas/nosurf v1.2.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 )
