@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"path/filepath"
 	"time"
+
 	"github.com/EDITH5607/PasteDash/internal/models"
+	"github.com/justinas/nosurf"
 )
 
 type templateData struct {
@@ -15,6 +17,8 @@ type templateData struct {
 	Form any
 	Flash string
 	IsAuthenticated  bool
+	CSRFToken string
+
 }
 
 func humanDate(t time.Time) string {
@@ -45,7 +49,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		if err != nil {
 			return nil, err
 		}
-		
+				
 		// parsing all "partial file instead of making an slice"
 		ts, err = ts.ParseGlob("./ui/html/partials/*.html")
 
@@ -67,6 +71,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData{
 		// popstring() will retrieve and remove it from the session data...
 		Flash: app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.isAuthenticated(r),
+		CSRFToken: nosurf.Token(r),
 
 	}
 }
