@@ -21,12 +21,12 @@ func (app *application) routes() http.Handler{
 	router.Handler(http.MethodGet,"/static/*filepath",http.StripPrefix("/static",fs))
 
 
-	dynamic := alice.New(app.sessionManager.LoadAndSave)
+	dynamic := alice.New(app.sessionManager.LoadAndSave,noSurf)
 
 	//routes 
 	// middleware like loadAndSave accept the next fn as handler so we convert it http.handler type
 	//also middleware return http.Handler type but the router.HandlerFunc accepts http.HandlerFunc but middleware return http.handler method that why we either convert to handler or change the router.Hander() 
-	router.Handler(http.MethodGet,"/", app.sessionManager.LoadAndSave(http.HandlerFunc(app.home)))
+	router.Handler(http.MethodGet,"/", dynamic.ThenFunc(app.home))
 	
 	// the router.HandlerFunc() is remove because it accept fn and type convert the fn into http handler 
 	// but the middleware chain and middleware are already type as handlers so no need to convert so we use router.Handler 
