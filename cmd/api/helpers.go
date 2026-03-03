@@ -10,6 +10,7 @@ import (
 )
 
 
+// for rendering the desired cached templates from the map
 func (app *application)render(w http.ResponseWriter, status int, data *templateData, page string) {
 	
 	// passing name of the page for retrive from the cache if not found error handling works
@@ -40,6 +41,7 @@ func (app *application)render(w http.ResponseWriter, status int, data *templateD
 }
 
 
+// placing the form data into the corresponding struct , parsing the form data into struct
 func  (app *application)DecodePostForm(r *http.Request, dst any) error  {
 	err := r.ParseForm()
 	if err != nil {
@@ -60,21 +62,30 @@ func  (app *application)DecodePostForm(r *http.Request, dst any) error  {
 }
 
 
+
+// for debugging using debug.stack() and show server side error
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	app.ErrLog.Output(2, trace)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
+
+//for showing the client side error 
 func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
+
+// for showing the Not Found error 
 func (app *application) NotFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
 }
 
+
+// for checking the user is authenticated or not
 func (app *application) isAuthenticated (r *http.Request) bool {
+	// check the isAuthenticatedContextKey is in the request context (which is placed by the authenticator middleware if the user is valid user)
 	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
 	if !ok {
 		return false
