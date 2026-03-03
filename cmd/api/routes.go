@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/EDITH5607/PasteDash/ui"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 )
@@ -17,8 +18,13 @@ func (app *application) routes() http.Handler{
 	}) 
 
 	//file server
-	fs:= http.FileServer(http.Dir("./ui/static/"))
-	router.Handler(http.MethodGet,"/static/*filepath",http.StripPrefix("/static",fs))
+	// fs:= http.FileServer(http.Dir("./ui/static/"))
+	// use stripprefix because the file server root is ./ui/static and request is /static/css/index.css then the whole request is like ./ui/static/static/css/index.css so to strip the /static we use that 
+	// router.Handler(http.MethodGet,"/static/*filepath",http.StripPrefix("/static",fs))
+
+	//file server with embedded files
+	fs := http.FileServer(http.FS(ui.Files))
+	router.Handler(http.MethodGet, "/static/*filepath", fs)
 
 
 	dynamic := alice.New(app.sessionManager.LoadAndSave,noSurf,app.authenticate)
