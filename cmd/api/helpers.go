@@ -75,5 +75,9 @@ func (app *application) NotFound(w http.ResponseWriter) {
 }
 
 func (app *application) isAuthenticated (r *http.Request) bool {
-	return app.sessionManager.Exists(r.Context(), "AuthenticatedUserID")
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	if !ok {
+		return false
+	}
+	 return isAuthenticated
 }
