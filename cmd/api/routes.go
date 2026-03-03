@@ -21,7 +21,7 @@ func (app *application) routes() http.Handler{
 	router.Handler(http.MethodGet,"/static/*filepath",http.StripPrefix("/static",fs))
 
 
-	dynamic := alice.New(app.sessionManager.LoadAndSave,noSurf)
+	dynamic := alice.New(app.sessionManager.LoadAndSave,noSurf,app.authenticate)
 
 	//routes 
 	// middleware like loadAndSave accept the next fn as handler so we convert it http.handler type
