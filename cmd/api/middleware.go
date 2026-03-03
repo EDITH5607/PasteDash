@@ -29,6 +29,7 @@ The outerfn execute when the server is started and return the innerfn . this inn
 
 func (app *application) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// logging each informtion about the request...
 		app.InfoLog.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
 		next.ServeHTTP(w, r)
 	})
@@ -36,6 +37,7 @@ func (app *application) logRequest(next http.Handler) http.Handler {
 
 func securityHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// setting the security header...
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; style src 'self' fonts.googleapis.com; font-src fonts.gstatic.com")
 		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -47,10 +49,12 @@ func securityHeader(next http.Handler) http.Handler {
 
 func (app *application) requiredAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// check the useauthenticationkey in the request and give permission to access the private routes  
 		if !app.isAuthenticated(r) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 			return
 		}
+		// tell the browser not to store the html pages...
 		w.Header().Add("Cache-Control", "no-store")
 		next.ServeHTTP(w, r)
 
@@ -59,12 +63,14 @@ func (app *application) requiredAuthentication(next http.Handler) http.Handler {
 
 // the actual object that returned by the noSurf middleware is the csrfhandler and when we write any code before that is just configering that
 func noSurf(next http.Handler) http.Handler {
+	// making a new handler and set the csrf token cookie
 	csrfHandler := nosurf.New(next)
 	csrfHandler.SetBaseCookie(http.Cookie{
 		HttpOnly: true,
 		Path:     "/",
 		Secure:   true,
 	})
+	// returning the configered csrf handler
 	return csrfHandler
 }
 
