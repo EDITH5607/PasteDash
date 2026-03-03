@@ -56,8 +56,8 @@ func NotBlank(value string) bool {
 	return strings.TrimSpace(value) != ""
 }
 
-// checking the value inside the list
-func PermitInt(value int, permittedvalues ...int) bool {
+// checking the value inside the list , we use go generic for this purpose
+func PermitValues[T comparable](value T, permittedvalues ...T) bool {
 	for i := range permittedvalues {
 		if value == permittedvalues[i] {
 			return true
