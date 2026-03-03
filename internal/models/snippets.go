@@ -19,6 +19,8 @@ type SnippetModel struct{
 	DB *sql.DB
 }
 
+
+// insert the snippet data into the db
 func (m *SnippetModel) Insert(title string, content string, expire int) (int, error){
 	stmt := `INSERT INTO snippets (title, content, created, expires)
 		   VALUES(?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
@@ -34,6 +36,7 @@ func (m *SnippetModel) Insert(title string, content string, expire int) (int, er
 	return int(id), nil
 }
 
+// retriveing the data from the db
 func (m *SnippetModel) Get(id int) (*Snippet, error) {
 	stmt := `SELECT id, title, content, created, expires FROM snippets
 			WHERE expires > UTC_TIMESTAMP() AND id = ?`
@@ -50,6 +53,8 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 	return s, nil
 }
 
+
+// getting the latest snippets from the db
 func (m *SnippetModel) Latest() ([]*Snippet, error) {
 	stmt := `SELECT id, title, content, created, expires FROM snippets
 			WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
