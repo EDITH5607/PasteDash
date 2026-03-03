@@ -231,10 +231,11 @@ func (app *application) userLoginPost (w http.ResponseWriter, r *http.Request) {
 		data.Form = form
 		// getting form field error messages  and other data using newtemplatedata func and adding snippet to the struct from db.
 		app.render(w,http.StatusOK, data,"login.html")
+		return
 	}
 
 	// Authenticating the user with email and password
-	id, err :=app.Users.Authenticate(form.Email, form.Password)
+	id, err := app.Users.Authenticate(form.Email, form.Password)
 	if err != nil {
 		if errors.Is(err,models.ErrInvalidCredential) {
 			form.AddNonFieldErrors("Email or password is incorrect!!")
@@ -255,7 +256,8 @@ func (app *application) userLoginPost (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// storing the authenticated user id as context for future use
+
+	// storing the authenticated user id as cookie in user browser from request context for 
 	app.sessionManager.Put(r.Context(), "AuthenticatedUserID", id)
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }	
@@ -268,9 +270,11 @@ func (app *application) userLogoutPost (w http.ResponseWriter, r *http.Request) 
 		app.serverError(w,err)
 		return
 	}
-	// remove the authentication id from the context
+
+	// remove the authentication id from the  request context
 	app.sessionManager.Remove(r.Context(), "AuthenticatedUserID")
-	// showing the flash message
+
+	// showing the flash message and updating the the cookie (to remove the authenticated userid)
 	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
 	http.Redirect(w,r,"/", http.StatusSeeOther)
 
