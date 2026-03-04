@@ -83,7 +83,7 @@ go run ./cmd/web
 
 You can find the live version of **PasteDash** hosted and running at the link below. This deployment showcases the full production-grade workflow, including secure session handling and optimized template rendering.
 
-**Live Link:** [Insert Your Hosting URL Here (e.g., [link](https://www.google.com/search?q=https://pastedash.yourdomain.com))]
+**Live Link:** coming soon
 
 ---
 
